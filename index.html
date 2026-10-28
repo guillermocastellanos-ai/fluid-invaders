@@ -26,7 +26,7 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
 <div class="wrap">
   <div class="hud">
     <div><b>FLUID INVADERS</b> · <span id="hudLevel">1/10</span> · <span id="hudPhase">SECADO</span> · <span id="hudScore">0</span> pts · ♥ <span id="hudLives">3</span></div>
-    <div class="status"><span class="pill">MENSAJE <b id="hudWeapon">ENTRENAMIENTO</b></span><span class="pill">ESCUDO <b id="hudShield">0</b></span><span id="hudDual" class="pill dual hidden">INHIBICIÓN DUAL</span><button id="pauseBtn" class="btn" disabled>PAUSA</button></div>
+    <div class="status"><span class="pill">MENSAJE <b id="hudWeapon">ENTRENAMIENTO</b></span><span class="pill">ESCUDO <b id="hudShield">0</b></span><span id="hudDual" class="pill dual hidden">INHIBICIÓN DUAL</span><span id="hudMode" class="pill hidden">MODO+ · x2</span><button id="pauseBtn" class="btn" disabled>PAUSA</button></div>
   </div>
   <div id="game" class="game" tabindex="0" aria-label="Fluid Invaders. Usa flechas izquierda y derecha para moverte y espacio para disparar.">
     <canvas id="canvas"></canvas>
@@ -50,7 +50,7 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
           <div class="training-step">01 · MUÉVETE con ← → y mantén DISPARO para atacar.</div>
           <div class="training-step">02 · Tus enemigos no son iguales: HSR, SHRM, fibrosis, fluido persistente, polipoideas y otros presentan resistencias distintas.</div>
           <div class="training-step">03 · No empiezas con todo el arsenal. Irás desbloqueando <strong>mensajes de Vabysmo</strong> y cada uno se convertirá en un arma con un comportamiento diferente.</div>
-          <div class="training-step">04 · En mitad de la campaña podrás desbloquear <strong>INHIBICIÓN DUAL</strong> y combinar dos sistemas de ataque.</div>
+          <div class="training-step">04 · En mitad de la campaña podrás desbloquear <strong>INHIBICIÓN DUAL</strong> y combinar dos sistemas de ataque.</div><div id="hardTrainingNote" class="training-step" style="border-color:rgba(200,255,34,.38)"><strong>MODO+:</strong> enemigos más resistentes, más rápidos y agresivos. Cada punto vale x2.</div>
         </div>
         <button id="startTraining" class="btn dual">COMENZAR ENTRENAMIENTO</button>
       </div>
@@ -98,7 +98,10 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
         </div>
         <div class="sub">En el universo de <strong style="color:white">Fluid Invaders</strong>, uno a uno, los grandes enemigos de la campaña han quedado atrás. La misión termina. La vigilancia continúa.</div>
         <div id="victoryScore" class="sub" style="margin-top:14px;color:#c8ff22;font-weight:900"></div>
-        <button id="playAgain" class="btn primary" style="margin-top:16px">NUEVA CAMPAÑA</button>
+        <div class="choices" style="margin-top:16px">
+          <button id="playAgain" class="btn primary"><b>NUEVO JUEGO</b><br><span style="font-size:10px">Dificultad normal · x1 puntuación</span></button>
+          <button id="playHard" class="btn dual"><b>NUEVO JUEGO+</b><br><span style="font-size:10px">Más difícil · x2 puntuación</span></button>
+        </div>
       </div>
     </div>
   </div>
@@ -113,7 +116,7 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
 <script>
 (() => {
 const q=s=>document.querySelector(s),canvas=q('#canvas'),ctx=canvas.getContext('2d'),game=q('#game');
-const TOTAL=10;let W=900,H=620,dpr=1,raf=0,last=0,running=false,paused=false,level=1,score=0,lives=3,weapon=1,shield=0,choice='',dual=false,dualAvailable=false;
+const TOTAL=10;let W=900,H=620,dpr=1,raf=0,last=0,running=false,paused=false,level=1,score=0,lives=3,weapon=1,shield=0,choice='',dual=false,dualAvailable=false,hardMode=false,scoreMultiplier=1;
 let player={x:450,y:545},shots=[],enemyShots=[],enemies=[],boss=null,particles=[],stars=[],enemyDir=1,enemySpeed=17,enemyFireTimer=0;const keys={left:false,right:false};let touchFireTimer=null;
 const names=['ENTRENAMIENTO','SECADO','POLIPOIDEAS','HSR','INHIBICIÓN DUAL','SHRM','FIBROSIS','FLUIDO PERSISTENTE','ARSENAL COMPLETO','NEXUS FINAL'];
 const success=['¡ENTRENAMIENTO COMPLETADO!','¡GENIAL VELOCIDAD DE SECADO!','¡BUEN TRABAJO FRENTE A LAS LESIONES POLIPOIDEAS!','¡HSR SUPERADO!','¡INHIBICIÓN DUAL ACTIVADA!','¡SHRM SUPERADO!','¡FIBROSIS SUPERADA!','¡EL FLUIDO PERSISTENTE RETROCEDE!','¡ARSENAL DOMINADO!','¡NEXUS FINAL NEUTRALIZADO!'];
@@ -147,10 +150,11 @@ const weapons=[
 let unlockedWeapons=0,activeWeapon=-1,secondWeapon=-1;
 const name=()=>names[level-1],label=()=>level+'/'+TOTAL,pal=()=>palettes[level-1];
 function currentWeapon(){return activeWeapon>=0?weapons[activeWeapon]:null}
+function addScore(points){score+=Math.round(points*scoreMultiplier);sync()}
 function weaponForUnlock(){return weapons[Math.min(level-1,weapons.length-1)]}
 function size(){const r=game.getBoundingClientRect();W=Math.max(320,Math.floor(r.width));H=Math.max(500,Math.floor(r.height));dpr=Math.min(devicePixelRatio||1,2);canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);player.y=H-68;player.x=Math.max(84,Math.min(W-84,player.x));draw(performance.now())}
 function makeStars(){stars=[];for(let i=0;i<165;i++)stars.push({x:(i*173)%1600,y:(i*97)%800,z:.2+(i%9)/9,s:i%23===0?2:1})}
-function sync(){q('#hudLevel').textContent=label();q('#hudPhase').textContent=name();q('#hudScore').textContent=score;q('#hudLives').textContent=lives;q('#hudWeapon').textContent=currentWeapon()?currentWeapon().name:'ENTRENAMIENTO';q('#hudShield').textContent=shield;q('#hudDual').classList.toggle('hidden',!dual)}
+function sync(){q('#hudLevel').textContent=label();q('#hudPhase').textContent=name();q('#hudScore').textContent=score;q('#hudLives').textContent=lives;q('#hudWeapon').textContent=currentWeapon()?currentWeapon().name:'ENTRENAMIENTO';q('#hudShield').textContent=shield;q('#hudDual').classList.toggle('hidden',!dual);q('#hudMode').classList.toggle('hidden',!hardMode)}
 function glow(x,y,r,color,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.globalAlpha=a;ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
 function retinaProgress(){return .26+((level-1)/(TOTAL-1))*.52}
 function retinalBackdrop(t){
@@ -345,7 +349,7 @@ function enemy(e){const p=pal(),s=level>=5?38:34;ctx.save();ctx.translate(e.x,e.
 function bossDraw(t){if(!boss)return;const p=pal(),r=level===10?108:92;ctx.save();ctx.translate(boss.x,boss.y);ctx.rotate(Math.sin(t*.001)*.04);ctx.shadowColor='rgba(0,0,0,.75)';ctx.shadowBlur=24;ctx.shadowOffsetY=13;const g=ctx.createRadialGradient(-25,-25,5,0,0,r);g.addColorStop(0,p[2]);g.addColorStop(.25,p[0]);g.addColorStop(.7,p[1]);g.addColorStop(1,'#101725');ctx.fillStyle=g;ctx.beginPath();ctx.ellipse(0,0,r,r*.5,0,0,Math.PI*2);ctx.fill();ctx.shadowColor='transparent';const arms=level===10?10:8;for(let i=0;i<arms;i++){ctx.save();ctx.rotate(Math.PI*2*i/arms);let ag=ctx.createLinearGradient(70,0,118,0);ag.addColorStop(0,p[1]);ag.addColorStop(1,i%2?p[0]:'#d2ff39');ctx.fillStyle=ag;ctx.fillRect(r*.7,-7,level===10?48:38,14);ctx.restore()}ctx.fillStyle='#06111c';ctx.beginPath();ctx.arc(0,0,42,0,Math.PI*2);ctx.fill();let core=ctx.createRadialGradient(-5,-6,2,0,0,27);core.addColorStop(0,'#fff');core.addColorStop(.22,p[2]);core.addColorStop(.65,p[0]);core.addColorStop(1,p[1]);ctx.fillStyle=core;ctx.beginPath();ctx.arc(0,0,27,0,Math.PI*2);ctx.fill();ctx.restore();ctx.fillStyle='rgba(255,255,255,.14)';ctx.fillRect(W/2-115,23,230,9);let hg=ctx.createLinearGradient(W/2-115,0,W/2+115,0);hg.addColorStop(0,p[0]);hg.addColorStop(1,p[2]);ctx.fillStyle=hg;ctx.fillRect(W/2-115,23,230*Math.max(0,boss.hp/boss.maxHp),9);ctx.fillStyle='#fff';ctx.font='10px monospace';ctx.textAlign='center';ctx.fillText((level===10?'FINAL BOSS':'BOSS')+' · '+boss.hp+' HP',W/2,15)}
 function projectile(b,enemy=false){ctx.save();ctx.globalCompositeOperation='lighter';const c=b.color||'#dff9ff',g=ctx.createLinearGradient(b.x,b.y-18,b.x,b.y+18);g.addColorStop(0,'rgba(255,255,255,0)');g.addColorStop(.4,c);g.addColorStop(.55,'#fff');g.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=g;ctx.lineWidth=enemy?5:4;ctx.beginPath();ctx.moveTo(b.x,b.y-17);ctx.lineTo(b.x,b.y+17);ctx.stroke();ctx.restore()}
 function draw(t){ctx.clearRect(0,0,W,H);bg(t||0);drawP();for(const e of enemies)if(e.alive)enemy(e);bossDraw(t||0);for(const b of shots)projectile(b);for(const b of enemyShots)projectile(b,true);ship(t||0)}
-function wave(){shots=[];enemyShots=[];boss=null;enemyDir=1;enemyFireTimer=0;if(level%3===0||level===10){enemies=[];const hp=(level===10?48:20+level*3)+(level>=5?8:0);boss={x:W/2,y:135,hp,maxHp:hp,v:60+(level>=5?16:0)};return}enemies=[];const count=Math.min(6,4+Math.floor((level-1)/2)),cols=Math.min(3,count),rows=Math.ceil(count/cols),gap=Math.min(142,(W-130)/Math.max(1,cols-1)),sx=W/2-(cols-1)*gap/2,hp=1+Math.floor((level-1)/2)+(level>=5?1:0);let n=0;for(let r=0;r<rows;r++)for(let c=0;c<cols&&n<count;c++,n++)enemies.push({x:sx+c*gap,y:124+r*111,hp,maxHp:hp,alive:true})}
+function wave(){shots=[];enemyShots=[];boss=null;enemyDir=1;enemyFireTimer=0;if(level%3===0||level===10){enemies=[];let hp=(level===10?48:20+level*3)+(level>=5?8:0);if(hardMode)hp=Math.ceil(hp*1.55);boss={x:W/2,y:135,hp,maxHp:hp,v:(60+(level>=5?16:0))*(hardMode?1.28:1)};return}enemies=[];const count=Math.min(6,4+Math.floor((level-1)/2)),cols=Math.min(3,count),rows=Math.ceil(count/cols),gap=Math.min(142,(W-130)/Math.max(1,cols-1)),sx=W/2-(cols-1)*gap/2,hp=(1+Math.floor((level-1)/2)+(level>=5?1:0))+(hardMode?1:0);let n=0;for(let r=0;r<rows;r++)for(let c=0;c<cols&&n<count;c++,n++)enemies.push({x:sx+c*gap,y:124+r*111,hp,maxHp:hp,alive:true})}
 function fire(){
   if(!running||paused)return;
   const y=player.y-52,w=currentWeapon();
@@ -373,11 +377,11 @@ function fire(){
   }
   shots.push(...arr);if(shots.length>28)shots.splice(0,shots.length-28)
 }
-function enemyFire(){if(level<5)return;let pool=enemies.filter(e=>e.alive);if(boss)pool=[boss];if(!pool.length)return;const e=pool[Math.floor(Math.random()*pool.length)],c=level%2?'#ff769b':'#ffb34a';enemyShots.push({x:e.x,y:e.y+32,v:155+level*11,color:c});if(level>=8&&boss)enemyShots.push({x:e.x-28,y:e.y+25,v:180,color:'#c8ff22'},{x:e.x+28,y:e.y+25,v:180,color:'#58d9ff'})}
+function enemyFire(){if(level<(hardMode?3:5))return;let pool=enemies.filter(e=>e.alive);if(boss)pool=[boss];if(!pool.length)return;const e=pool[Math.floor(Math.random()*pool.length)],c=level%2?'#ff769b':'#ffb34a';enemyShots.push({x:e.x,y:e.y+32,v:(155+level*11)*(hardMode?1.22:1),color:c});if((level>=8||hardMode&&level>=6)&&boss)enemyShots.push({x:e.x-28,y:e.y+25,v:180*(hardMode?1.2:1),color:'#c8ff22'},{x:e.x+28,y:e.y+25,v:180*(hardMode?1.2:1),color:'#58d9ff'})}
 function explode(x,y,c){for(let i=0;i<18;i++){const a=Math.PI*2*i/18,s=55+Math.random()*85;addP(x,y,Math.cos(a)*s,Math.sin(a)*s,.42+Math.random()*.35,c,2+Math.random()*3)}}
 function hitPlayer(){enemyShots=[];if(shield>0){shield--;sync();explode(player.x,player.y,'#67dfff');return}lives--;sync();explode(player.x,player.y,'#fff');if(lives<=0){running=false;q('#pauseBtn').disabled=true;q('#finalScore').textContent='SCORE '+score+' · NIVEL '+label();q('#gameover').classList.remove('hidden')}else{player.x=W/2;wave()}}
 function complete(){
-  if(level===TOTAL){running=false;q('#pauseBtn').disabled=true;q('#victoryScore').textContent='FINAL SCORE · '+score+' PUNTOS';q('#victory').classList.remove('hidden');return}
+  if(level===TOTAL){running=false;q('#pauseBtn').disabled=true;q('#victoryScore').textContent='FINAL SCORE · '+score+' PUNTOS · '+(hardMode?'MODO+ x2':'MODO NORMAL');q('#victory').classList.remove('hidden');return}
   paused=true;choice='';interStep=0;
   q('#continueBtn').disabled=false;q('#continueBtn').textContent='EQUIPAR Y CONTINUAR →';
   q('#between').classList.remove('hidden');renderIntermission();
@@ -416,7 +420,7 @@ function next(){
   const idx=Math.min(level-1,weapons.length-1);
   if(level<=8){activeWeapon=idx;unlockedWeapons=Math.max(unlockedWeapons,idx+1);weapon=Math.min(4,1+Math.floor(unlockedWeapons/2))}
   if(level===4)shield=Math.max(shield,1);
-  level++;enemySpeed+=level>=5?5:3;q('#between').classList.add('hidden');sync();
+  level++;enemySpeed+=(level>=5?5:3)*(hardMode?1.2:1);q('#between').classList.add('hidden');sync();
   if(level===5&&!dualAvailable){dualAvailable=true;paused=true;q('#dualUnlock').classList.remove('hidden');return}
   paused=false;wave();game.focus()
 }
@@ -428,7 +432,7 @@ function activateDual(){
   sync();
   setTimeout(()=>{q('#dualUnlock').classList.add('hidden');card.classList.remove('awaken');btn.disabled=false;btn.textContent='DESBLOQUEAR PODER';paused=false;wave();game.focus()},900)
 }
-function update(dt){if(keys.left)player.x-=320*dt;if(keys.right)player.x+=320*dt;player.x=Math.max(84,Math.min(W-84,player.x));for(const b of shots)b.y-=525*dt;for(const b of enemyShots)b.y+=b.v*dt;shots=shots.filter(b=>b.y>-35);enemyShots=enemyShots.filter(b=>b.y<H+30);updateP(dt);if(level>=5){enemyFireTimer+=dt;if(enemyFireTimer>Math.max(.52,1.62-level*.085)){enemyFireTimer=0;enemyFire()}}for(const b of enemyShots){if(Math.abs(b.x-player.x)<38&&Math.abs(b.y-player.y)<30){b.y=H+100;hitPlayer();return}}if(boss){boss.x+=boss.v*dt;if(boss.x>W-125||boss.x<125)boss.v*=-1;for(const b of shots){if(Math.abs(b.x-boss.x)<105&&Math.abs(b.y-boss.y)<58){boss.hp-=b.damage||1;b.y=-100;score+=20;sync();if(boss.hp<=0){explode(boss.x,boss.y,pal()[2]);score+=level===10?1200:550;boss=null;sync();complete();return}}}}else{let left=Infinity,right=-Infinity;for(const e of enemies)if(e.alive){left=Math.min(left,e.x);right=Math.max(right,e.x)}if((enemyDir>0&&right>W-49)||(enemyDir<0&&left<49)){enemyDir*=-1;for(const e of enemies)if(e.alive)e.y+=22+(level>=5?3:0)}for(const e of enemies)if(e.alive)e.x+=enemyDir*enemySpeed*dt;for(const b of shots){for(const e of enemies){if(e.alive&&Math.abs(b.x-e.x)<42&&Math.abs(b.y-e.y)<44){e.hp-=b.damage||1;b.y=-100;explode(e.x,e.y,pal()[0]);if(e.hp<=0){e.alive=false;score+=12*e.maxHp}sync();break}}}if(enemies.length&&enemies.every(e=>!e.alive)){score+=120;sync();complete();return}if(enemies.some(e=>e.alive&&e.y>H-118)){hitPlayer();return}}}
+function update(dt){if(keys.left)player.x-=320*dt;if(keys.right)player.x+=320*dt;player.x=Math.max(84,Math.min(W-84,player.x));for(const b of shots)b.y-=525*dt;for(const b of enemyShots)b.y+=b.v*dt;shots=shots.filter(b=>b.y>-35);enemyShots=enemyShots.filter(b=>b.y<H+30);updateP(dt);if(level>=(hardMode?3:5)){enemyFireTimer+=dt;const fireGap=hardMode?Math.max(.36,1.20-level*.065):Math.max(.52,1.62-level*.085);if(enemyFireTimer>fireGap){enemyFireTimer=0;enemyFire()}}for(const b of enemyShots){if(Math.abs(b.x-player.x)<38&&Math.abs(b.y-player.y)<30){b.y=H+100;hitPlayer();return}}if(boss){boss.x+=boss.v*dt;if(boss.x>W-125||boss.x<125)boss.v*=-1;for(const b of shots){if(Math.abs(b.x-boss.x)<105&&Math.abs(b.y-boss.y)<58){boss.hp-=b.damage||1;b.y=-100;addScore(20);if(boss.hp<=0){explode(boss.x,boss.y,pal()[2]);addScore(level===10?1200:550);boss=null;complete();return}}}}else{let left=Infinity,right=-Infinity;for(const e of enemies)if(e.alive){left=Math.min(left,e.x);right=Math.max(right,e.x)}if((enemyDir>0&&right>W-49)||(enemyDir<0&&left<49)){enemyDir*=-1;for(const e of enemies)if(e.alive)e.y+=22+(level>=5?3:0)}for(const e of enemies)if(e.alive)e.x+=enemyDir*enemySpeed*dt;for(const b of shots){for(const e of enemies){if(e.alive&&Math.abs(b.x-e.x)<42&&Math.abs(b.y-e.y)<44){e.hp-=b.damage||1;b.y=-100;explode(e.x,e.y,pal()[0]);if(e.hp<=0){e.alive=false;addScore(12*e.maxHp)}else{sync()}break}}}if(enemies.length&&enemies.every(e=>!e.alive)){addScore(120);complete();return}if(enemies.some(e=>e.alive&&e.y>H-118)){hitPlayer();return}}}
 function renderStory(){
   q('#storyText').innerHTML=story[storyStep];
   q('#storyProgress').textContent='0'+(storyStep+1)+' / 03';
@@ -436,8 +440,8 @@ function renderStory(){
   q('#startBtn').classList.toggle('hidden',storyStep!==story.length-1);
 }
 function loop(t){if(!running)return;const dt=Math.min((t-last)/1000,.034)||0;last=t;if(!paused)update(dt);draw(t);raf=requestAnimationFrame(loop)}
-function start(){keys.left=false;keys.right=false;if(touchFireTimer){clearInterval(touchFireTimer);touchFireTimer=null}cancelAnimationFrame(raf);level=1;score=0;lives=3;weapon=1;shield=0;choice='';dual=false;dualAvailable=false;unlockedWeapons=0;activeWeapon=-1;secondWeapon=-1;enemySpeed=17;player={x:W/2,y:H-68};shots=[];enemyShots=[];enemies=[];particles=[];boss=null;running=true;paused=false;q('#intro').classList.add('hidden');q('#training').classList.remove('hidden');q('#between').classList.add('hidden');q('#dualUnlock').classList.add('hidden');q('#gameover').classList.add('hidden');q('#victory').classList.add('hidden');q('#pauseBtn').disabled=false;q('#pauseBtn').textContent='PAUSA';sync();paused=true;game.focus();last=performance.now();raf=requestAnimationFrame(loop)}
-q('#introNext').addEventListener('click',()=>{storyStep=Math.min(story.length-1,storyStep+1);renderStory()});q('#startTraining').addEventListener('click',()=>{q('#training').classList.add('hidden');paused=false;wave();sync();game.focus()});q('#intermissionNext').addEventListener('click',()=>{interStep=Math.min(2,interStep+1);renderIntermission()});q('#startBtn').addEventListener('click',start);q('#restartBtn').addEventListener('click',start);q('#playAgain').addEventListener('click',start);q('#continueBtn').addEventListener('click',next);q('#activateDual').addEventListener('click',activateDual);q('#pauseBtn').addEventListener('click',()=>{if(!running)return;paused=!paused;q('#pauseBtn').textContent=paused?'CONTINUAR':'PAUSA';game.focus()});game.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' ')fire()});game.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});let canvasDragging=false;
+function start(mode='normal'){hardMode=mode==='hard';scoreMultiplier=hardMode?2:1;keys.left=false;keys.right=false;if(touchFireTimer){clearInterval(touchFireTimer);touchFireTimer=null}cancelAnimationFrame(raf);level=1;score=0;lives=3;weapon=1;shield=0;choice='';dual=false;dualAvailable=false;unlockedWeapons=0;activeWeapon=-1;secondWeapon=-1;enemySpeed=hardMode?23:17;player={x:W/2,y:H-68};shots=[];enemyShots=[];enemies=[];particles=[];boss=null;running=true;paused=false;q('#intro').classList.add('hidden');q('#training').classList.remove('hidden');q('#training .eyebrow').textContent=hardMode?'01/10 · ENTRENAMIENTO · MODO+ x2':'01/10 · CENTRO DE ENTRENAMIENTO';q('#between').classList.add('hidden');q('#dualUnlock').classList.add('hidden');q('#gameover').classList.add('hidden');q('#victory').classList.add('hidden');q('#pauseBtn').disabled=false;q('#pauseBtn').textContent='PAUSA';q('#hardTrainingNote').classList.toggle('hidden',!hardMode);sync();paused=true;game.focus();last=performance.now();raf=requestAnimationFrame(loop)}
+q('#introNext').addEventListener('click',()=>{storyStep=Math.min(story.length-1,storyStep+1);renderStory()});q('#startTraining').addEventListener('click',()=>{q('#training').classList.add('hidden');paused=false;wave();sync();game.focus()});q('#intermissionNext').addEventListener('click',()=>{interStep=Math.min(2,interStep+1);renderIntermission()});q('#startBtn').addEventListener('click',()=>start('normal'));q('#restartBtn').addEventListener('click',()=>start(hardMode?'hard':'normal'));q('#playAgain').addEventListener('click',()=>start('normal'));q('#playHard').addEventListener('click',()=>start('hard'));q('#continueBtn').addEventListener('click',next);q('#activateDual').addEventListener('click',activateDual);q('#pauseBtn').addEventListener('click',()=>{if(!running)return;paused=!paused;q('#pauseBtn').textContent=paused?'CONTINUAR':'PAUSA';game.focus()});game.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' ')fire()});game.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});let canvasDragging=false;
 game.addEventListener('pointerdown',e=>{
   if(!running||paused||e.pointerType==='mouse')return;
   if(e.target!==canvas)return;
