@@ -126,7 +126,7 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
 (() => {
 const q=s=>document.querySelector(s),canvas=q('#canvas'),ctx=canvas.getContext('2d'),game=q('#game');
 const TOTAL=10;let W=900,H=620,dpr=1,raf=0,last=0,running=false,paused=false,level=1,score=0,lives=3,weapon=1,shield=0,choice='',dual=false,dualAvailable=false,hardMode=false,scoreMultiplier=1;
-let player={x:450,y:545},shots=[],enemyShots=[],enemies=[],boss=null,particles=[],stars=[],enemyDir=1,enemySpeed=17,enemyFireTimer=0;const keys={left:false,right:false};let touchFireTimer=null,audioCtx=null,audioEnabled=false,introMusicTimer=null,introMusicStep=0;
+let player={x:450,y:545},shots=[],enemyShots=[],enemies=[],boss=null,particles=[],stars=[],enemyDir=1,enemySpeed=17,enemyFireTimer=0;const keys={left:false,right:false};let touchFireTimer=null,audioCtx=null,audioEnabled=false,introMusicTimer=null,introMusicStep=0,musicVolume=1;
 const names=['ENTRENAMIENTO','SECADO INICIAL','VELOCIDAD DE SECADO','FLUIDO PERSISTENTE','INHIBICIÓN DUAL','HSR','SHRM','FIBROSIS','POLIPOIDEAS','NEXUS FINAL'];
 const success=['¡ENTRENAMIENTO COMPLETADO!','¡GRAN SECADO INICIAL!','¡GENIAL VELOCIDAD DE SECADO!','¡EL FLUIDO PERSISTENTE RETROCEDE!','¡INHIBICIÓN DUAL ACTIVADA!','¡HSR SUPERADO!','¡SHRM SUPERADO!','¡FIBROSIS SUPERADA!','¡POLIPOIDEAS SUPERADAS!','¡NEXUS FINAL NEUTRALIZADO!'];
 const palettes=[['#5ee0f5','#115677','#d9fbff'],['#ef78bd','#5c245e','#ffd6ef'],['#ffad59','#6d2635','#ffe2b3'],['#69d5b6','#1e625f','#dbfff4'],['#58d9ff','#7ea719','#d8ff74'],['#9d8cff','#3e347f','#eee9ff'],['#75d8e8','#24536c','#e2fbff'],['#dd73ba','#5d2a62','#ffd8f0'],['#ff9068','#73313c','#ffe2d7'],['#d7ff40','#243451','#f1ffaf']];
@@ -426,9 +426,9 @@ function playIntroMusic(){
   const tick=()=>{
     const bar=Math.floor(introMusicStep/8)%sequence.length;
     const note=sequence[bar][introMusicStep%4];
-    tone(note,.16,'square',.020);
-    tone(note*2,.10,'triangle',.010,.03);
-    if(introMusicStep%4===0)tone(sequence[bar][0]/2,.30,'sawtooth',.012);
+    tone(note,.16,'square',.020*musicVolume);
+    tone(note*2,.10,'triangle',.010*musicVolume,.03);
+    if(introMusicStep%4===0)tone(sequence[bar][0]/2,.30,'sawtooth',.012*musicVolume);
     introMusicStep++;
   };
   tick();introMusicTimer=setInterval(tick,190);
@@ -663,14 +663,14 @@ function renderPixelIntro(ts){
 }
 function showBriefing(){
   if(introSceneDone)return;
-  stopIntroMusic();
+  musicVolume=.42;
   introSceneDone=true;cancelAnimationFrame(introSceneRAF);
   q('#pixelIntro').classList.add('hidden');
   q('#briefingCard').classList.remove('hidden');
   storyStep=0;renderStory();
 }
 function startPixelIntro(){
-  stopIntroMusic();introSceneDone=false;introSceneStart=0;
+  stopIntroMusic();musicVolume=1;introSceneDone=false;introSceneStart=0;
   q('#pixelIntro').classList.remove('hidden');q('#briefingCard').classList.add('hidden');
   cancelAnimationFrame(introSceneRAF);
   if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){
@@ -685,7 +685,7 @@ function renderStory(){
   q('#startBtn').classList.toggle('hidden',storyStep!==story.length-1);
 }
 function loop(t){if(!running)return;const dt=Math.min((t-last)/1000,.034)||0;last=t;if(!paused)update(dt);draw(t);raf=requestAnimationFrame(loop)}
-function start(mode='normal'){stopIntroMusic();clearReadGate();hardMode=mode==='hard';scoreMultiplier=hardMode?2:1;keys.left=false;keys.right=false;if(touchFireTimer){clearInterval(touchFireTimer);touchFireTimer=null}cancelAnimationFrame(raf);level=1;score=0;lives=3;weapon=1;shield=0;choice='';dual=false;dualAvailable=false;unlockedWeapons=0;activeWeapon=-1;secondWeapon=-1;enemySpeed=hardMode?23:17;player={x:W/2,y:H-68};shots=[];enemyShots=[];enemies=[];particles=[];boss=null;running=true;paused=false;q('#intro').classList.add('hidden');q('#training').classList.remove('hidden');q('#training .eyebrow').textContent=hardMode?'01/10 · ENTRENAMIENTO · MODO+ x2':'01/10 · CENTRO DE ENTRENAMIENTO';q('#between').classList.add('hidden');q('#dualUnlock').classList.add('hidden');q('#gameover').classList.add('hidden');q('#victory').classList.add('hidden');q('#pauseBtn').disabled=false;q('#pauseBtn').textContent='PAUSA';q('#hardTrainingNote').classList.toggle('hidden',!hardMode);sync();paused=true;game.focus();last=performance.now();raf=requestAnimationFrame(loop)}
+function start(mode='normal'){musicVolume=.28;if(audioEnabled&&!introMusicTimer)playIntroMusic();clearReadGate();hardMode=mode==='hard';scoreMultiplier=hardMode?2:1;keys.left=false;keys.right=false;if(touchFireTimer){clearInterval(touchFireTimer);touchFireTimer=null}cancelAnimationFrame(raf);level=1;score=0;lives=3;weapon=1;shield=0;choice='';dual=false;dualAvailable=false;unlockedWeapons=0;activeWeapon=-1;secondWeapon=-1;enemySpeed=hardMode?23:17;player={x:W/2,y:H-68};shots=[];enemyShots=[];enemies=[];particles=[];boss=null;running=true;paused=false;q('#intro').classList.add('hidden');q('#training').classList.remove('hidden');q('#training .eyebrow').textContent=hardMode?'01/10 · ENTRENAMIENTO · MODO+ x2':'01/10 · CENTRO DE ENTRENAMIENTO';q('#between').classList.add('hidden');q('#dualUnlock').classList.add('hidden');q('#gameover').classList.add('hidden');q('#victory').classList.add('hidden');q('#pauseBtn').disabled=false;q('#pauseBtn').textContent='PAUSA';q('#hardTrainingNote').classList.toggle('hidden',!hardMode);sync();paused=true;game.focus();last=performance.now();raf=requestAnimationFrame(loop)}
 q('#audioIntro').addEventListener('click',()=>{if(!audioEnabled){playIntroMusic()}else{stopIntroMusic();audioEnabled=false;q('#audioIntro').textContent='🔇 AUDIO OFF';q('#audioIntro').classList.remove('on')}});q('#skipIntro').addEventListener('click',showBriefing);q('#introNext').addEventListener('click',()=>{transitionSfx('brief');storyStep=Math.min(story.length-1,storyStep+1);renderStory()});q('#startTraining').addEventListener('click',()=>{transitionSfx('launch');q('#training').classList.add('hidden');paused=false;wave();sync();game.focus()});q('#intermissionNext').addEventListener('click',()=>{if(q('#intermissionNext').disabled)return;transitionSfx(interStep===0?'destination':'brief');interStep=Math.min(2,interStep+1);renderIntermission()});q('#startBtn').addEventListener('click',()=>start('normal'));q('#restartBtn').addEventListener('click',()=>start(hardMode?'hard':'normal'));q('#playAgain').addEventListener('click',()=>start('normal'));q('#playHard').addEventListener('click',()=>start('hard'));q('#continueBtn').addEventListener('click',()=>{if(q('#continueBtn').disabled)return;transitionSfx('equip');clearReadGate();next()});q('#activateDual').addEventListener('click',activateDual);q('#pauseBtn').addEventListener('click',()=>{if(!running)return;paused=!paused;q('#pauseBtn').textContent=paused?'CONTINUAR':'PAUSA';game.focus()});game.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' ')fire()});game.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});let canvasDragging=false;
 game.addEventListener('pointerdown',e=>{
   if(!running||paused||e.pointerType==='mouse')return;
@@ -714,6 +714,7 @@ fireBtn.addEventListener('pointerdown',e=>{e.preventDefault();if(!running||pause
 fireBtn.addEventListener('pointerup',stopTouchFire);fireBtn.addEventListener('pointercancel',stopTouchFire);fireBtn.addEventListener('lostpointercapture',stopTouchFire);
 
 window.addEventListener('blur',()=>{keys.left=false;keys.right=false;stopTouchFire();stopIntroMusic()});
+window.addEventListener('focus',()=>{if(audioEnabled&&!introSceneDone&&q('#pixelIntro')&&!q('#pixelIntro').classList.contains('hidden')){musicVolume=1;playIntroMusic()}else if(audioEnabled&&running&&!introMusicTimer){musicVolume=.28;playIntroMusic()}});
 window.addEventListener('resize',size);
 window.addEventListener('orientationchange',()=>setTimeout(size,120));
 makeStars();sync();renderStory();size();startPixelIntro();
