@@ -477,6 +477,13 @@ function clearReadGate(){
 function startReadGate(seconds,button,readyText){
   clearReadGate();
   const gate=q('#readGate');
+  if(level>=5){
+    button.disabled=false;
+    button.textContent=readyText;
+    gate.textContent='';
+    gate.classList.remove('ready');
+    return;
+  }
   let left=seconds;
   button.disabled=true;
   gate.classList.remove('ready');
