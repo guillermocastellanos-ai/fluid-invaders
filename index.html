@@ -96,7 +96,7 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
       <div class="score-panel">
         <div class="score-title">TOP PILOTS</div>
         <div class="initials-row"><input id="gameoverInitials" class="initials-input" maxlength="3" inputmode="text" autocomplete="off" aria-label="Tres letras para el scoreboard"><button id="gameoverSubmit" class="btn dual" disabled>REGISTRAR</button></div>
-        <div class="score-note">INTRODUCE 3 LETRAS</div>
+        <div class="score-note">INTRODUCE 3 LETRAS · TOP 10 EN ESTE DISPOSITIVO</div>
         <div id="gameoverBoard" class="scoreboard"></div>
       </div>
       <button id="restartBtn" class="btn primary" style="margin-top:16px">RELAUNCH</button></div></div>
@@ -116,7 +116,7 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
         <div class="score-panel">
           <div class="score-title">TOP PILOTS</div>
           <div class="initials-row"><input id="victoryInitials" class="initials-input" maxlength="3" inputmode="text" autocomplete="off" aria-label="Tres letras para el scoreboard"><button id="victorySubmit" class="btn dual" disabled>REGISTRAR</button></div>
-          <div class="score-note">INTRODUCE 3 LETRAS</div>
+          <div class="score-note">INTRODUCE 3 LETRAS · TOP 10 EN ESTE DISPOSITIVO</div>
           <div id="victoryBoard" class="scoreboard"></div>
         </div>
         <div class="choices" style="margin-top:16px">
@@ -139,8 +139,8 @@ body{padding:6px}.hud{margin-bottom:4px}.game{height:calc(100svh - 86px);min-hei
 const q=s=>document.querySelector(s),canvas=q('#canvas'),ctx=canvas.getContext('2d'),game=q('#game');
 const TOTAL=10;let W=900,H=620,dpr=1,raf=0,last=0,running=false,paused=false,level=1,score=0,lives=3,weapon=1,shield=0,choice='',dual=false,dualAvailable=false,hardMode=false,scoreMultiplier=1;
 let player={x:450,y:545},shots=[],enemyShots=[],enemies=[],boss=null,particles=[],stars=[],enemyDir=1,enemySpeed=17,enemyFireTimer=0;const keys={left:false,right:false};let touchFireTimer=null,audioCtx=null,audioEnabled=false,introMusicTimer=null,introMusicStep=0,scoreSubmitted=false;
-const names=['ENTRENAMIENTO','SECADO','POLIPOIDEAS','HSR','INHIBICIÓN DUAL','SHRM','FIBROSIS','FLUIDO PERSISTENTE','ARSENAL COMPLETO','NEXUS FINAL'];
-const success=['¡ENTRENAMIENTO COMPLETADO!','¡GENIAL VELOCIDAD DE SECADO!','¡BUEN TRABAJO FRENTE A LAS LESIONES POLIPOIDEAS!','¡HSR SUPERADO!','¡INHIBICIÓN DUAL ACTIVADA!','¡SHRM SUPERADO!','¡FIBROSIS SUPERADA!','¡EL FLUIDO PERSISTENTE RETROCEDE!','¡ARSENAL DOMINADO!','¡NEXUS FINAL NEUTRALIZADO!'];
+const names=['ENTRENAMIENTO','SECADO INICIAL','VELOCIDAD DE SECADO','FLUIDO PERSISTENTE','INHIBICIÓN DUAL','HSR','SHRM','FIBROSIS','POLIPOIDEAS','NEXUS FINAL'];
+const success=['¡ENTRENAMIENTO COMPLETADO!','¡GRAN SECADO INICIAL!','¡GENIAL VELOCIDAD DE SECADO!','¡EL FLUIDO PERSISTENTE RETROCEDE!','¡INHIBICIÓN DUAL ACTIVADA!','¡HSR SUPERADO!','¡SHRM SUPERADO!','¡FIBROSIS SUPERADA!','¡POLIPOIDEAS SUPERADAS!','¡NEXUS FINAL NEUTRALIZADO!'];
 const palettes=[['#5ee0f5','#115677','#d9fbff'],['#ef78bd','#5c245e','#ffd6ef'],['#ffad59','#6d2635','#ffe2b3'],['#69d5b6','#1e625f','#dbfff4'],['#58d9ff','#7ea719','#d8ff74'],['#9d8cff','#3e347f','#eee9ff'],['#75d8e8','#24536c','#e2fbff'],['#dd73ba','#5d2a62','#ffd8f0'],['#ff9068','#73313c','#ffe2d7'],['#d7ff40','#243451','#f1ffaf']];
 const story=[
   '<div><strong>Durante muchas misiones, VABYSMO® ha cruzado el sistema Retina</strong>, completando campaña tras campaña y manteniendo abiertas las rutas del planeta.</div>',
@@ -149,25 +149,23 @@ const story=[
 ];
 let storyStep=0,interStep=0,introSceneRAF=0,introSceneStart=0,introSceneDone=false,readGateTimer=null;
 const destinationBriefs=[
-  ['POLIPOIDEAS','Tu siguiente destino son las <strong>POLIPOIDEAS</strong>.','Las defensas enemigas aumentan. Necesitas más potencia para entrar en el siguiente sector.'],
-  ['HSR','Tu siguiente destino es <strong>HSR</strong>.','La señal es más densa y resistente. Prepara la Starfighter para un combate de mayor intensidad.'],
-  ['SHRM','Tu siguiente destino es <strong>SHRM</strong>.','El nuevo enemigo presenta más resistencia. Necesitarás reforzar tu capacidad antes de continuar.'],
-  ['SECTOR DUAL','Estás entrando en un sector desconocido del sistema Retina.','Los sensores detectan una fuente de energía extraordinaria. Antes de alcanzarla, mejora tu Starfighter.'],
-  ['FLUIDO PERSISTENTE','Tu siguiente destino es el <strong>FLUIDO PERSISTENTE</strong>.','A partir de aquí los invasores también atacan. Necesitas más potencia y protección.'],
+  ['SECADO INICIAL','Tu siguiente destino es el <strong>SECADO INICIAL</strong>.','Empieza por dominar el terreno del fluido. Necesitas una primera herramienta potente para abrirte paso.'],
+  ['VELOCIDAD DE SECADO','Tu siguiente destino es la <strong>VELOCIDAD DE SECADO</strong>.','Sigues dentro del sector de fluido. Ahora importa responder con rapidez y ganar cadencia.'],
+  ['FLUIDO PERSISTENTE','Tu siguiente destino es el <strong>FLUIDO PERSISTENTE</strong>.','Último gran reto del bloque de fluido: una amenaza que exige mantener la presión.'],
+  ['SECTOR DUAL','Has completado el bloque de fluido. El siguiente salto te llevará hacia <strong>HSR</strong>.','Los sensores detectan una fuente de energía extraordinaria. Estás a punto de acceder a la Inhibición Dual.'],
+  ['HSR','Tu siguiente destino es <strong>HSR</strong>.','La campaña entra en una nueva fase. Necesitarás un ataque más concentrado y preciso.'],
+  ['SHRM','Tu siguiente destino es <strong>SHRM</strong>.','El enemigo gana resistencia estructural. Ajusta tu arsenal antes de avanzar.'],
   ['FIBROSIS','Tu siguiente destino es la <strong>FIBROSIS</strong>.','Las defensas se endurecen. Solo una Starfighter evolucionada podrá atravesarlas.'],
-  ['ACTIVIDAD VASCULAR','Tu siguiente destino es la <strong>ACTIVIDAD VASCULAR</strong>.','La amenaza se mueve más rápido. Elige cómo quieres evolucionar tu nave.'],
-  ['RESISTENCIA','Tu siguiente destino es la <strong>RESISTENCIA</strong>.','Estás cerca del núcleo enemigo. Cada mejora cuenta.'],
-  ['NEXUS FINAL','Tu siguiente destino es el <strong>NEXUS FINAL</strong>.','Última frontera. Refuerza la Starfighter antes del enfrentamiento definitivo.']
-];
+  ['POLIPOIDEAS','Tu siguiente destino son las <strong>POLIPOIDEAS</strong>.','Último gran aprendizaje antes del Nexus Final. Necesitarás dominar todo el arsenal.'],
+  ['NEXUS FINAL','Tu siguiente destino es el <strong>NEXUS FINAL</strong>.','Última frontera. Combina todo lo aprendido antes del enfrentamiento definitivo.']
 const weapons=[
  {name:'MAYOR SECADO INICIAL',msg:'Vabysmo® mostró mayor reducción del grosor del subcampo central en la semana 12 frente a aflibercept 2 mg.',effect:'CAÑÓN PESADO · MÁS DAÑO POR IMPACTO',color:'#63d9ff'},
  {name:'VELOCIDAD DE SECADO',msg:'En ojos naïve con DMAEn, el volumen medio de fluido intrarretiniano y subretiniano se redujo un 83,9 % al mes de iniciar faricimab.',effect:'RÁFAGA RÁPIDA · MAYOR CADENCIA',color:'#7be4ff'},
- {name:'POLIPOIDEAS',msg:'En SALWEEN, el 62 % presentó regresión completa de las lesiones polipoideas y el 86 % no presentó lesiones activas en la semana 108.',effect:'DISPARO MÚLTIPLE · COBERTURA AMPLIA',color:'#f07ac2'},
+ {name:'FLUIDO PERSISTENTE',msg:'El 44 % de los pacientes con fluido persistente tratados con aflibercept 2 mg cada 8 semanas resolvió el fluido tras cambiar a faricimab.',effect:'PULSO PERSISTENTE · DISPARO CONTINUADO',color:'#5fc7e8'},
  {name:'HSR',msg:'Los pacientes necesitaron una media de 2 inyecciones de Vabysmo® para la resolución de la hemorragia subretiniana.',effect:'PULSO CONCENTRADO · PERFORA BLINDAJE',color:'#ffad59'},
  {name:'SHRM',msg:'El 70 % de los pacientes con SHRM basal mostró resolución en la última visita de seguimiento.',effect:'RAYO PRECISO · BONUS CONTRA OBJETIVOS DUROS',color:'#72d5ba'},
  {name:'FIBROSIS',msg:'El 50 % de los casos con fibrosis subretiniana al inicio mostró resolución o mejoría en la última visita de seguimiento.',effect:'IMPACTO DE ALTA ENERGÍA · DAÑO SOSTENIDO',color:'#a58cff'},
- {name:'FLUIDO PERSISTENTE',msg:'El 44 % de los pacientes con fluido persistente tratados con aflibercept 2 mg cada 8 semanas resolvió el fluido tras cambiar a faricimab.',effect:'PULSO PERSISTENTE · DISPARO CONTINUADO',color:'#d973ba'}
-];
+ {name:'POLIPOIDEAS',msg:'En SALWEEN, el 62 % presentó regresión completa de las lesiones polipoideas y el 86 % no presentó lesiones activas en la semana 108.',effect:'DISPARO MÚLTIPLE · COBERTURA AMPLIA',color:'#f07ac2'}
 let unlockedWeapons=0,activeWeapon=-1,secondWeapon=-1;
 const name=()=>names[level-1],label=()=>level+'/'+TOTAL,pal=()=>palettes[level-1];
 function currentWeapon(){return activeWeapon>=0?weapons[activeWeapon]:null}
@@ -406,6 +404,20 @@ function shotSfx(){
   osc.connect(gain).connect(audioCtx.destination);
   osc.start(t0);osc.stop(t0+.09);
   if(dual)tone(1040,.055,'triangle',.027,.018);
+}
+function transitionSfx(kind='next'){
+  if(!audioEnabled||!audioCtx)return;
+  if(kind==='brief'){
+    tone(392,.07,'triangle',.026);tone(523.25,.09,'square',.018,.055);
+  }else if(kind==='destination'){
+    tone(329.63,.07,'square',.022);tone(493.88,.08,'triangle',.020,.06);tone(659.25,.10,'triangle',.014,.12);
+  }else if(kind==='equip'){
+    tone(523.25,.08,'square',.026);tone(659.25,.08,'square',.022,.055);tone(783.99,.13,'triangle',.022,.11);
+  }else if(kind==='launch'){
+    tone(220,.06,'sawtooth',.018);tone(440,.09,'triangle',.024,.045);
+  }else{
+    tone(440,.06,'triangle',.02);tone(587.33,.08,'triangle',.014,.05);
+  }
 }
 function stopIntroMusic(){
   if(introMusicTimer){clearInterval(introMusicTimer);introMusicTimer=null}
@@ -735,7 +747,7 @@ function renderStory(){
 }
 function loop(t){if(!running)return;const dt=Math.min((t-last)/1000,.034)||0;last=t;if(!paused)update(dt);draw(t);raf=requestAnimationFrame(loop)}
 function start(mode='normal'){stopIntroMusic();clearReadGate();scoreSubmitted=false;const vi=q('#victoryInitials'),gi=q('#gameoverInitials');if(vi)vi.disabled=false;if(gi)gi.disabled=false;const vs=q('#victorySubmit'),gs=q('#gameoverSubmit');if(vs)vs.textContent='REGISTRAR';if(gs)gs.textContent='REGISTRAR';hardMode=mode==='hard';scoreMultiplier=hardMode?2:1;keys.left=false;keys.right=false;if(touchFireTimer){clearInterval(touchFireTimer);touchFireTimer=null}cancelAnimationFrame(raf);level=1;score=0;lives=3;weapon=1;shield=0;choice='';dual=false;dualAvailable=false;unlockedWeapons=0;activeWeapon=-1;secondWeapon=-1;enemySpeed=hardMode?23:17;player={x:W/2,y:H-68};shots=[];enemyShots=[];enemies=[];particles=[];boss=null;running=true;paused=false;q('#intro').classList.add('hidden');q('#training').classList.remove('hidden');q('#training .eyebrow').textContent=hardMode?'01/10 · ENTRENAMIENTO · MODO+ x2':'01/10 · CENTRO DE ENTRENAMIENTO';q('#between').classList.add('hidden');q('#dualUnlock').classList.add('hidden');q('#gameover').classList.add('hidden');q('#victory').classList.add('hidden');q('#pauseBtn').disabled=false;q('#pauseBtn').textContent='PAUSA';q('#hardTrainingNote').classList.toggle('hidden',!hardMode);sync();paused=true;game.focus();last=performance.now();raf=requestAnimationFrame(loop)}
-q('#victorySubmit').addEventListener('click',()=>submitScore('victory'));q('#gameoverSubmit').addEventListener('click',()=>submitScore('gameover'));q('#victoryInitials').addEventListener('keydown',e=>{if(e.key==='Enter')submitScore('victory')});q('#gameoverInitials').addEventListener('keydown',e=>{if(e.key==='Enter')submitScore('gameover')});q('#audioIntro').addEventListener('click',()=>{if(!audioEnabled){playIntroMusic()}else{stopIntroMusic();audioEnabled=false;q('#audioIntro').textContent='🔇 AUDIO OFF';q('#audioIntro').classList.remove('on')}});q('#skipIntro').addEventListener('click',showBriefing);q('#introNext').addEventListener('click',()=>{storyStep=Math.min(story.length-1,storyStep+1);renderStory()});q('#startTraining').addEventListener('click',()=>{q('#training').classList.add('hidden');paused=false;wave();sync();game.focus()});q('#intermissionNext').addEventListener('click',()=>{if(q('#intermissionNext').disabled)return;interStep=Math.min(2,interStep+1);renderIntermission()});q('#startBtn').addEventListener('click',()=>start('normal'));q('#restartBtn').addEventListener('click',()=>start(hardMode?'hard':'normal'));q('#playAgain').addEventListener('click',()=>start('normal'));q('#playHard').addEventListener('click',()=>start('hard'));q('#continueBtn').addEventListener('click',()=>{if(q('#continueBtn').disabled)return;clearReadGate();next()});q('#activateDual').addEventListener('click',activateDual);q('#pauseBtn').addEventListener('click',()=>{if(!running)return;paused=!paused;q('#pauseBtn').textContent=paused?'CONTINUAR':'PAUSA';game.focus()});game.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' ')fire()});game.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});let canvasDragging=false;
+q('#victorySubmit').addEventListener('click',()=>submitScore('victory'));q('#gameoverSubmit').addEventListener('click',()=>submitScore('gameover'));q('#victoryInitials').addEventListener('keydown',e=>{if(e.key==='Enter')submitScore('victory')});q('#gameoverInitials').addEventListener('keydown',e=>{if(e.key==='Enter')submitScore('gameover')});q('#audioIntro').addEventListener('click',()=>{if(!audioEnabled){playIntroMusic()}else{stopIntroMusic();audioEnabled=false;q('#audioIntro').textContent='🔇 AUDIO OFF';q('#audioIntro').classList.remove('on')}});q('#skipIntro').addEventListener('click',showBriefing);q('#introNext').addEventListener('click',()=>{transitionSfx('brief');storyStep=Math.min(story.length-1,storyStep+1);renderStory()});q('#startTraining').addEventListener('click',()=>{transitionSfx('launch');q('#training').classList.add('hidden');paused=false;wave();sync();game.focus()});q('#intermissionNext').addEventListener('click',()=>{if(q('#intermissionNext').disabled)return;transitionSfx(interStep===0?'destination':'brief');interStep=Math.min(2,interStep+1);renderIntermission()});q('#startBtn').addEventListener('click',()=>start('normal'));q('#restartBtn').addEventListener('click',()=>start(hardMode?'hard':'normal'));q('#playAgain').addEventListener('click',()=>start('normal'));q('#playHard').addEventListener('click',()=>start('hard'));q('#continueBtn').addEventListener('click',()=>{if(q('#continueBtn').disabled)return;transitionSfx('equip');clearReadGate();next()});q('#activateDual').addEventListener('click',activateDual);q('#pauseBtn').addEventListener('click',()=>{if(!running)return;paused=!paused;q('#pauseBtn').textContent=paused?'CONTINUAR':'PAUSA';game.focus()});game.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowLeft')keys.left=true;if(e.key==='ArrowRight')keys.right=true;if(e.key===' ')fire()});game.addEventListener('keyup',e=>{if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false});let canvasDragging=false;
 game.addEventListener('pointerdown',e=>{
   if(!running||paused||e.pointerType==='mouse')return;
   if(e.target!==canvas)return;
