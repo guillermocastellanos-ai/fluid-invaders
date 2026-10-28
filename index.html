@@ -627,10 +627,10 @@ function renderPixelIntro(ts){
 
   drawPixelHQ(g,t);
 
-  // 0-3.2 s shuttle approaches and lands
+  // 0-4.2 s shuttle approaches and lands
   let shuttleX,shuttleY,landed=false;
-  if(t<3200){
-    const p=Math.min(1,t/3200);
+  if(t<4200){
+    const p=Math.min(1,t/4200);
     const ease=1-Math.pow(1-p,3);
     shuttleX=-65+ease*118;
     shuttleY=28+ease*72;
@@ -638,28 +638,28 @@ function renderPixelIntro(ts){
   drawPixelShuttle(g,shuttleX,shuttleY,landed);
 
   // exhaust during descent
-  if(t<3200&&t>900){
+  if(t<4200&&t>1000){
     const a=.3+.3*Math.sin(t*.02);g.globalAlpha=.35+a;
     pxRect(g,68,132,4,8,'#69dfff');pxRect(g,94,132,4,8,'#9b77ff');g.globalAlpha=1;
   }
 
   // pilot exits and walks toward HQ
-  if(t>3900){
-    const p=Math.min(1,(t-3900)/3000);
+  if(t>5200){
+    const p=Math.min(1,(t-5200)/4000);
     const px=94+p*128;
-    const bob=(Math.floor((t-3900)/180)%2)*1;
-    drawPixelPilot(g,px,112+bob,Math.floor((t-3900)/180));
+    const bob=(Math.floor((t-5200)/180)%2)*1;
+    drawPixelPilot(g,px,112+bob,Math.floor((t-5200)/180));
   }
 
   // captions
   let caption='APROXIMACIÓN A BASE RETINA…';
-  if(t>1700)caption='TRANSPORTE R-17 · AUTORIZACIÓN DE ATERRIZAJE CONCEDIDA';
-  if(t>3300)caption='NUEVO PILOTO CONFIRMADO · PROTOCOLO DE RECLUTAMIENTO';
-  if(t>5000)caption='DESTINO: SEDE ROCHE–NASA · CENTRO DE MISIONES RETINA';
-  if(t>6800)caption='ACCESO CONCEDIDO · PREPARANDO BRIEFING…';
+  if(t>2200)caption='TRANSPORTE R-17 · AUTORIZACIÓN DE ATERRIZAJE CONCEDIDA';
+  if(t>4400)caption='NUEVO PILOTO CONFIRMADO · PROTOCOLO DE RECLUTAMIENTO';
+  if(t>6500)caption='DESTINO: SEDE ROCHE–NASA · CENTRO DE MISIONES RETINA';
+  if(t>9000)caption='ACCESO CONCEDIDO · PREPARANDO BRIEFING…';
   q('#pixelCaption').textContent=caption;
 
-  if(t>=7600){showBriefing();return}
+  if(t>=10800){showBriefing();return}
   introSceneRAF=requestAnimationFrame(renderPixelIntro);
 }
 function showBriefing(){
@@ -675,7 +675,7 @@ function startPixelIntro(){
   q('#pixelIntro').classList.remove('hidden');q('#briefingCard').classList.add('hidden');
   cancelAnimationFrame(introSceneRAF);
   if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){
-    introSceneStart=performance.now()-6900;
+    introSceneStart=performance.now()-9800;
   }
   introSceneRAF=requestAnimationFrame(renderPixelIntro);
 }
