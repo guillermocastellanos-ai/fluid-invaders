@@ -196,7 +196,6 @@ function hitPlayer(){enemyShots=[];if(shield>0){shield--;sync();explode(player.x
 function complete(){
   if(level===TOTAL){running=false;q('#pauseBtn').disabled=true;q('#victoryScore').textContent='FINAL SCORE · '+score+' PUNTOS';q('#victory').classList.remove('hidden');return}
   paused=true;choice='';interStep=0;
-  q('#upgradeGun').style.opacity='1';q('#upgradeShield').style.opacity='1';
   q('#continueBtn').disabled=false;q('#continueBtn').textContent='EQUIPAR Y CONTINUAR →';
   q('#between').classList.remove('hidden');renderIntermission();
 }
@@ -232,7 +231,7 @@ function renderIntermission(){
 }
 function next(){
   const idx=Math.min(level-1,weapons.length-1);
-  if(level<=8){activeWeapon=idx;unlockedWeapons=Math.max(unlockedWeapons,idx+1)}
+  if(level<=8){activeWeapon=idx;unlockedWeapons=Math.max(unlockedWeapons,idx+1);weapon=Math.min(4,1+Math.floor(unlockedWeapons/2))}
   if(level===4)shield=Math.max(shield,1);
   level++;enemySpeed+=level>=5?5:3;q('#between').classList.add('hidden');sync();
   if(level===5&&!dualAvailable){dualAvailable=true;paused=true;q('#dualUnlock').classList.remove('hidden');return}
