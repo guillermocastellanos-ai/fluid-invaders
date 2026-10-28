@@ -146,6 +146,7 @@ const destinationBriefs=[
   ['FIBROSIS','Tu siguiente destino es la <strong>FIBROSIS</strong>.','Las defensas se endurecen. Solo una Starfighter evolucionada podrá atravesarlas.'],
   ['POLIPOIDEAS','Tu siguiente destino son las <strong>POLIPOIDEAS</strong>.','Último gran aprendizaje antes del Nexus Final. Necesitarás dominar todo el arsenal.'],
   ['NEXUS FINAL','Tu siguiente destino es el <strong>NEXUS FINAL</strong>.','Última frontera. Combina todo lo aprendido antes del enfrentamiento definitivo.']
+];
 const weapons=[
  {name:'MAYOR SECADO INICIAL',msg:'Vabysmo® mostró mayor reducción del grosor del subcampo central en la semana 12 frente a aflibercept 2 mg.',effect:'CAÑÓN PESADO · MÁS DAÑO POR IMPACTO',color:'#63d9ff'},
  {name:'VELOCIDAD DE SECADO',msg:'En ojos naïve con DMAEn, el volumen medio de fluido intrarretiniano y subretiniano se redujo un 83,9 % al mes de iniciar faricimab.',effect:'RÁFAGA RÁPIDA · MAYOR CADENCIA',color:'#7be4ff'},
@@ -154,6 +155,7 @@ const weapons=[
  {name:'SHRM',msg:'El 70 % de los pacientes con SHRM basal mostró resolución en la última visita de seguimiento.',effect:'RAYO PRECISO · BONUS CONTRA OBJETIVOS DUROS',color:'#72d5ba'},
  {name:'FIBROSIS',msg:'El 50 % de los casos con fibrosis subretiniana al inicio mostró resolución o mejoría en la última visita de seguimiento.',effect:'IMPACTO DE ALTA ENERGÍA · DAÑO SOSTENIDO',color:'#a58cff'},
  {name:'POLIPOIDEAS',msg:'En SALWEEN, el 62 % presentó regresión completa de las lesiones polipoideas y el 86 % no presentó lesiones activas en la semana 108.',effect:'DISPARO MÚLTIPLE · COBERTURA AMPLIA',color:'#f07ac2'}
+];
 let unlockedWeapons=0,activeWeapon=-1,secondWeapon=-1;
 const name=()=>names[level-1],label=()=>level+'/'+TOTAL,pal=()=>palettes[level-1];
 function currentWeapon(){return activeWeapon>=0?weapons[activeWeapon]:null}
