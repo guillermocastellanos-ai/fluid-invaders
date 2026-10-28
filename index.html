@@ -152,8 +152,191 @@ function size(){const r=game.getBoundingClientRect();W=Math.max(320,Math.floor(r
 function makeStars(){stars=[];for(let i=0;i<165;i++)stars.push({x:(i*173)%1600,y:(i*97)%800,z:.2+(i%9)/9,s:i%23===0?2:1})}
 function sync(){q('#hudLevel').textContent=label();q('#hudPhase').textContent=name();q('#hudScore').textContent=score;q('#hudLives').textContent=lives;q('#hudWeapon').textContent=currentWeapon()?currentWeapon().name:'ENTRENAMIENTO';q('#hudShield').textContent=shield;q('#hudDual').classList.toggle('hidden',!dual)}
 function glow(x,y,r,color,a){const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');ctx.globalAlpha=a;ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1}
-function bg(t){const p=pal(),g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#01040c');g.addColorStop(.55,'#08162b');g.addColorStop(1,'#120d27');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);glow(W*.23,H*.32,240,p[1],.11);glow(W*.68,H*.55,290,'#3c2d80',.08);for(const s of stars){const yy=(s.y+t*.012*s.z)%H;ctx.globalAlpha=.3+s.z*.65;ctx.fillStyle='#fff';ctx.fillRect(s.x%W,yy,s.s+s.z,s.s+s.z);ctx.globalAlpha=1}planet()}
-function planet(){const p=pal(),x=W-Math.max(74,W*.13),y=92,r=W<480?42:56;ctx.save();ctx.shadowColor='rgba(0,0,0,.75)';ctx.shadowBlur=22;ctx.shadowOffsetY=12;const g=ctx.createRadialGradient(x-r*.35,y-r*.38,r*.06,x,y,r);g.addColorStop(0,p[2]);g.addColorStop(.3,p[0]);g.addColorStop(1,p[1]);ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();ctx.shadowColor='transparent';ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(x,y,r*1.52,r*.28,-.3,0,Math.PI*2);ctx.stroke();if(level>=5){ctx.strokeStyle='rgba(200,255,34,.3)';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(x,y,r*1.82,r*.39,.18,0,Math.PI*2);ctx.stroke()}ctx.restore();ctx.fillStyle='rgba(225,244,255,.88)';ctx.font='9px monospace';ctx.textAlign='center';ctx.fillText(label()+' · '+name(),x,y+r+19)}
+function retinaProgress(){return .26+((level-1)/(TOTAL-1))*.52}
+function retinalBackdrop(t){
+  const p=pal(),rp=retinaProgress();
+
+  // Space remains the base layer.
+  const space=ctx.createLinearGradient(0,0,0,H);
+  space.addColorStop(0,'#01040c');
+  space.addColorStop(.48,'#071328');
+  space.addColorStop(1,'#140a22');
+  ctx.fillStyle=space;ctx.fillRect(0,0,W,H);
+
+  // Retinal tissue emerges progressively as a warm, organic cosmic surface.
+  const tissue=ctx.createRadialGradient(W*.58,H*.42,20,W*.52,H*.46,Math.max(W,H)*.78);
+  tissue.addColorStop(0,'rgba(88,24,54,'+(rp*.42)+')');
+  tissue.addColorStop(.42,'rgba(74,18,42,'+(rp*.32)+')');
+  tissue.addColorStop(1,'rgba(20,5,25,0)');
+  ctx.fillStyle=tissue;ctx.fillRect(0,0,W,H);
+
+  // Deep retinal/macular glow.
+  glow(W*.68,H*.37,Math.min(W,H)*.28,'#45152f',.10+rp*.09);
+  glow(W*.22,H*.36,Math.min(W,H)*.22,p[1],.07);
+
+  // Stars become slightly less dominant as the retina reveals itself.
+  const starFade=1-rp*.42;
+  for(const s of stars){
+    const yy=(s.y+t*.010*s.z)%H;
+    ctx.globalAlpha=(.24+s.z*.58)*starFade;
+    ctx.fillStyle=s.z>.7?'#dff7ff':'#fff';
+    ctx.fillRect(s.x%W,yy,s.s+s.z,s.s+s.z);
+  }
+  ctx.globalAlpha=1;
+
+  drawMaculaField(t,rp);
+  drawOpticPortal(t,rp);
+  drawRetinalVessels(t,rp);
+  drawPathologyNebula(t,rp);
+
+  // Atmospheric foreground haze for depth.
+  const haze=ctx.createLinearGradient(0,H*.58,0,H);
+  haze.addColorStop(0,'rgba(45,20,65,0)');
+  haze.addColorStop(1,'rgba(55,20,64,'+(rp*.16)+')');
+  ctx.fillStyle=haze;ctx.fillRect(0,H*.55,W,H*.45);
+}
+function drawMaculaField(t,rp){
+  const mx=W*.67,my=H*.36;
+  const r=Math.min(W,H)*(.11+rp*.045);
+
+  // Outer macular halo.
+  const halo=ctx.createRadialGradient(mx,my,r*.15,mx,my,r*1.9);
+  halo.addColorStop(0,'rgba(20,3,18,.72)');
+  halo.addColorStop(.34,'rgba(48,10,37,.38)');
+  halo.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=halo;ctx.beginPath();ctx.arc(mx,my,r*1.9,0,Math.PI*2);ctx.fill();
+
+  // Foveal eclipse.
+  const f=ctx.createRadialGradient(mx-r*.12,my-r*.12,2,mx,my,r);
+  f.addColorStop(0,'rgba(52,14,44,.74)');
+  f.addColorStop(.72,'rgba(16,3,18,.84)');
+  f.addColorStop(1,'rgba(5,3,13,.30)');
+  ctx.fillStyle=f;ctx.beginPath();ctx.arc(mx,my,r,0,Math.PI*2);ctx.fill();
+
+  ctx.strokeStyle='rgba(182,92,154,'+(.12+rp*.16)+')';
+  ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(mx,my,r*1.22,0,Math.PI*2);ctx.stroke();
+
+  if(level>=9){
+    ctx.strokeStyle='rgba(200,255,34,.22)';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(mx,my,r*1.52+Math.sin(t*.002)*3,0,Math.PI*2);ctx.stroke();
+  }
+}
+function drawOpticPortal(t,rp){
+  // Optic disc interpreted as a distant stellar portal where the vascular routes originate.
+  const ox=W*.16,oy=H*.34,r=Math.min(W,H)*.065;
+  const pulse=1+Math.sin(t*.0022)*.045;
+  const portal=ctx.createRadialGradient(ox-r*.22,oy-r*.25,2,ox,oy,r*1.35);
+  portal.addColorStop(0,'rgba(255,246,215,.96)');
+  portal.addColorStop(.24,'rgba(255,180,126,.78)');
+  portal.addColorStop(.58,'rgba(141,80,160,.44)');
+  portal.addColorStop(1,'rgba(49,30,86,0)');
+  ctx.fillStyle=portal;ctx.beginPath();ctx.arc(ox,oy,r*1.35*pulse,0,Math.PI*2);ctx.fill();
+
+  ctx.strokeStyle=dual?'rgba(200,255,34,.58)':'rgba(119,220,255,'+(.22+rp*.28)+')';
+  ctx.lineWidth=dual?2.4:1.5;
+  ctx.beginPath();ctx.arc(ox,oy,r*.92,0,Math.PI*2);ctx.stroke();
+
+  if(dual){
+    ctx.strokeStyle='rgba(88,217,255,.58)';
+    ctx.beginPath();ctx.arc(ox,oy,r*1.18,0,Math.PI*2);ctx.stroke();
+  }
+}
+function vesselPath(points,width,color,alpha,glowColor){
+  ctx.save();
+  ctx.globalAlpha=alpha;
+  ctx.lineCap='round';ctx.lineJoin='round';
+  if(glowColor){ctx.shadowColor=glowColor;ctx.shadowBlur=7;}
+  ctx.strokeStyle=color;ctx.lineWidth=width;
+  ctx.beginPath();
+  ctx.moveTo(points[0][0],points[0][1]);
+  for(let i=1;i<points.length;i+=3){
+    const a=points[i],b=points[i+1],d=points[i+2];
+    if(!d)break;
+    ctx.bezierCurveTo(a[0],a[1],b[0],b[1],d[0],d[1]);
+  }
+  ctx.stroke();ctx.restore();
+}
+function drawRetinalVessels(t,rp){
+  const ox=W*.16,oy=H*.34;
+  const drift=Math.sin(t*.00035)*5;
+  const baseAlpha=.16+rp*.38;
+  const cyan=dual?'#58d9ff':'#a55372';
+  const lime=dual?'#c8ff22':'#7d385c';
+  const glow1=dual?'rgba(88,217,255,.9)':'rgba(160,72,110,.35)';
+  const glow2=dual?'rgba(200,255,34,.8)':'rgba(120,55,85,.25)';
+
+  const paths=[
+    [[ox,oy],[W*.26,H*.20+drift],[W*.39,H*.12],[W*.57,H*.11],[W*.68,H*.10],[W*.80,H*.14],[W*.94,H*.08]],
+    [[ox,oy],[W*.28,H*.27],[W*.39,H*.23+drift],[W*.53,H*.26],[W*.67,H*.27],[W*.82,H*.24],[W*.98,H*.30]],
+    [[ox,oy],[W*.25,H*.43],[W*.39,H*.47],[W*.54,H*.51+drift],[W*.68,H*.55],[W*.84,H*.57],[W*.98,H*.64]],
+    [[ox,oy],[W*.23,H*.50],[W*.34,H*.62+drift],[W*.50,H*.68],[W*.65,H*.74],[W*.80,H*.80],[W*.94,H*.91]]
+  ];
+  paths.forEach((pts,i)=>vesselPath(pts,3.1-i*.28,i%2?lime:cyan,baseAlpha,i%2?glow2:glow1));
+
+  // Secondary branching capillaries.
+  const branches=[
+    [[W*.41,H*.23],[W*.47,H*.17],[W*.54,H*.17],[W*.62,H*.14]],
+    [[W*.54,H*.51],[W*.61,H*.45],[W*.68,H*.45],[W*.76,H*.42]],
+    [[W*.38,H*.47],[W*.45,H*.55],[W*.52,H*.59],[W*.61,H*.62]],
+    [[W*.67,H*.27],[W*.73,H*.33],[W*.79,H*.35],[W*.88,H*.38]],
+    [[W*.50,H*.68],[W*.56,H*.61],[W*.62,H*.59],[W*.70,H*.58]]
+  ];
+  branches.forEach((pts,i)=>vesselPath(pts,1.35,i%2?lime:cyan,baseAlpha*.72,i%2?glow2:glow1));
+}
+function cloud(x,y,rx,ry,color,alpha){
+  ctx.save();ctx.translate(x,y);ctx.scale(rx,ry);
+  const g=ctx.createRadialGradient(-.18,-.2,.05,0,0,1);
+  g.addColorStop(0,color);
+  g.addColorStop(.55,color.replace('1)','0.34)'));
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.globalAlpha=alpha;ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,1,0,Math.PI*2);ctx.fill();ctx.restore();ctx.globalAlpha=1;
+}
+function drawPathologyNebula(t,rp){
+  // The clinical theme becomes a cosmic biome, never a literal medical image.
+  const breathe=1+Math.sin(t*.0018)*.06;
+  if(level===3){ // Polypoidal
+    for(let i=0;i<7;i++){
+      const a=i*.86+t*.00012;
+      const x=W*.72+Math.cos(a)*W*.12;
+      const y=H*.46+Math.sin(a*1.25)*H*.12;
+      glow(x,y,12+(i%3)*4,'#ed69b5',.12+rp*.14);
+      ctx.fillStyle='rgba(239,105,181,.22)';ctx.beginPath();ctx.arc(x,y,(5+(i%3)*2)*breathe,0,Math.PI*2);ctx.fill();
+    }
+  }
+  if(level===4){ // HSR
+    cloud(W*.57,H*.50,W*.18*breathe,H*.10,'rgba(178,42,57,1)',.24+rp*.18);
+    cloud(W*.68,H*.55,W*.11,H*.07,'rgba(255,100,78,1)',.12+rp*.12);
+  }
+  if(level===6){ // SHRM
+    ctx.strokeStyle='rgba(208,170,190,'+(.18+rp*.20)+')';ctx.lineWidth=6;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(W*.48,H*.47);ctx.bezierCurveTo(W*.57,H*.39,W*.66,H*.44,W*.78,H*.38);ctx.stroke();
+    ctx.strokeStyle='rgba(255,233,242,.24)';ctx.lineWidth=2;ctx.stroke();
+  }
+  if(level===7){ // Fibrosis
+    const cx=W*.64,cy=H*.48;
+    for(let i=0;i<8;i++){
+      const a=i*Math.PI/4+t*.00008;
+      ctx.strokeStyle='rgba(229,222,237,'+(.10+rp*.18)+')';ctx.lineWidth=1.4+(i%2);
+      ctx.beginPath();ctx.moveTo(cx,cy);
+      ctx.quadraticCurveTo(cx+Math.cos(a+.6)*80,cy+Math.sin(a+.6)*50,cx+Math.cos(a)*150,cy+Math.sin(a)*95);
+      ctx.stroke();
+    }
+  }
+  if(level===8){ // Persistent fluid
+    cloud(W*.42,H*.46,W*.16,H*.09,'rgba(66,184,235,1)',.14+rp*.16);
+    cloud(W*.68,H*.58,W*.20,H*.11,'rgba(87,112,225,1)',.13+rp*.15);
+    cloud(W*.78,H*.35,W*.11,H*.06,'rgba(112,216,244,1)',.10+rp*.12);
+  }
+  if(level===10){
+    // Final macular sector: retinal structures dominate but the stars remain.
+    glow(W*.67,H*.36,Math.min(W,H)*.25,dual?'#c8ff22':'#8b335f',dual?.09:.07);
+  }
+}
+function bg(t){retinalBackdrop(t)}
+function planet(){/* Retinal Cosmos replaces the separate planet object. */}
+
 function addP(x,y,vx,vy,life,color,s){particles.push({x,y,vx,vy,life,max:life,color,s});if(particles.length>190)particles.splice(0,particles.length-190)}
 function updateP(dt){for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0)}
 function drawP(){for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,Math.PI*2);ctx.fill()}ctx.globalAlpha=1}
